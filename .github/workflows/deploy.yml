@@ -1,37 +1,52 @@
-name: Deploy Stack File
+name: Infra Swarm Deploy
 
 on:
   push:
     branches:
       - main
+      - master
     paths:
       - stack.yml
+      - developer.yml
+      - .github/workflows/deploy.yml
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  validate-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Copy stack.yml to EC2 Manager
+      - name: Validate stack syntax
+        run: docker compose -f stack.yml config > /tmp/stack.rendered.yml
+
+      - name: Copy stack files to Swarm manager
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.AWS_SSH_HOST }}
           username: ${{ secrets.AWS_SSH_USER }}
           key: ${{ secrets.AWS_SSH_KEY }}
-          source: "stack.yml"
-          target: "/home/${{ secrets.AWS_SSH_USER }}/todo-app/"
+          source: "stack.yml,developer.yml"
+          target: "/home/${{ secrets.AWS_SSH_USER }}/banco-nexus-infra/"
 
-      - name: Execute Swarm Deploy via SSH
+      - name: Deploy stack in Docker Swarm
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.AWS_SSH_HOST }}
           username: ${{ secrets.AWS_SSH_USER }}
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            mkdir -p /home/${{ secrets.AWS_SSH_USER }}/todo-app/
-            cd /home/${{ secrets.AWS_SSH_USER }}/todo-app/
-            docker stack deploy -c stack.yml todo_app --with-registry-auth
+            set -e
+            mkdir -p /home/${{ secrets.AWS_SSH_USER }}/banco-nexus-infra/
+            cd /home/${{ secrets.AWS_SSH_USER }}/banco-nexus-infra/
+
+            export STACK_NAME="${{ 'banco_nexus' }}"
+            export BACKEND_IMAGE="${{ secrets.DOCKER_USERNAME }}/banco-nexus-backend:latest"
+            export FRONTEND_IMAGE="${{ secrets.DOCKER_USERNAME }}/banco-nexus-frontend:latest"
+            export FRONTEND_API_URL="${{ secrets.FRONTEND_API_URL }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+
+            docker stack deploy --compose-file stack.yml "$STACK_NAME" --with-registry-auth
+            docker stack services "$STACK_NAME"
