@@ -1,20 +1,20 @@
 stackName: banco_nexus
 
 images:
-	backend: dockerhub-user/banco-nexus-backend:latest
-	frontend: dockerhub-user/banco-nexus-frontend:latest
+  backend: roberto1117/banco-nexus-backend:latest
+  frontend: roberto1117/banco-nexus-frontend:latest
 
 runtime:
-	frontendApiUrl: http://localhost:3000/api
+  frontendApiUrl: http://ec2-54-164-21-152.compute-1.amazonaws.com:3000/api
 
 requiredGithubSecrets:
-	- DOCKER_USERNAME
-	- DOCKER_PASSWORD
-	- AWS_SSH_HOST
-	- AWS_SSH_USER
-	- AWS_SSH_KEY
-	- FRONTEND_API_URL
-	- JWT_SECRET
+  - DOCKER_USERNAME
+  - DOCKER_PASSWORD
+  - AWS_SSH_HOST
+  - AWS_SSH_USER
+  - AWS_SSH_KEY
+  - FRONTEND_API_URL
+  - JWT_SECRET
 
 requiredGithubVariables:
-	- STACK_NAME
+  - STACK_NAME

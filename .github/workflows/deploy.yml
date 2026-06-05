@@ -39,14 +39,19 @@ jobs:
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
             set -e
+
             mkdir -p /home/${{ secrets.AWS_SSH_USER }}/banco-nexus-infra/
             cd /home/${{ secrets.AWS_SSH_USER }}/banco-nexus-infra/
 
-            export STACK_NAME="${{ 'banco_nexus' }}"
+            export STACK_NAME="${{ vars.STACK_NAME }}"
             export BACKEND_IMAGE="${{ secrets.DOCKER_USERNAME }}/banco-nexus-backend:latest"
             export FRONTEND_IMAGE="${{ secrets.DOCKER_USERNAME }}/banco-nexus-frontend:latest"
             export FRONTEND_API_URL="${{ secrets.FRONTEND_API_URL }}"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
 
-            docker stack deploy --compose-file stack.yml "$STACK_NAME" --with-registry-auth
+            docker stack deploy \
+              --compose-file stack.yml \
+              "$STACK_NAME" \
+              --with-registry-auth
+
             docker stack services "$STACK_NAME"
