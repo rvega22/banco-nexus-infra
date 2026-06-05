@@ -19,7 +19,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ✅ FIX: aquí es donde estabas rompiendo el compose config
       - name: Validate stack syntax
+        env:
+          BACKEND_IMAGE: ${{ secrets.DOCKER_USERNAME }}/banco-nexus-backend:latest
+          FRONTEND_IMAGE: ${{ secrets.DOCKER_USERNAME }}/banco-nexus-frontend:latest
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          FRONTEND_API_URL: ${{ secrets.FRONTEND_API_URL }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          PORT: ${{ secrets.PORT }}
         run: docker compose -f stack.yml config > /tmp/stack.rendered.yml
 
       - name: Copy stack files to Swarm manager
@@ -48,6 +56,8 @@ jobs:
             export FRONTEND_IMAGE="${{ secrets.DOCKER_USERNAME }}/banco-nexus-frontend:latest"
             export FRONTEND_API_URL="${{ secrets.FRONTEND_API_URL }}"
             export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            export MONGO_URI="${{ secrets.MONGO_URI }}"
+            export PORT="${{ secrets.PORT }}"
 
             docker stack deploy \
               --compose-file stack.yml \
