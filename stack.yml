@@ -15,117 +15,115 @@ volumes:
   mongo3_data:
 
 services:
-	mongo1:
-		image: mongo:7
-		command: ["mongod", "--replSet", "rsBanco", "--bind_ip_all", "--port", "27017"]
-		networks:
-			- nexus-internal
-		volumes:
-			- mongo1_data:/data/db
-		deploy:
-			replicas: 1
-			placement:
-				constraints:
-					- node.role == manager
-			restart_policy:
-				condition: on-failure
+  mongo1:
+    image: mongo:7
+    command: ["mongod", "--replSet", "rsBanco", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - nexus-internal
+    volumes:
+      - mongo1_data:/data/db
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
 
-	mongo2:
-		image: mongo:7
-		command: ["mongod", "--replSet", "rsBanco", "--bind_ip_all", "--port", "27017"]
-		networks:
-			- nexus-internal
-		volumes:
-			- mongo2_data:/data/db
-		deploy:
-			replicas: 1
-			placement:
-				constraints:
-					- node.role == manager
-			restart_policy:
-				condition: on-failure
+  mongo2:
+    image: mongo:7
+    command: ["mongod", "--replSet", "rsBanco", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - nexus-internal
+    volumes:
+      - mongo2_data:/data/db
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
 
-	mongo3:
-		image: mongo:7
-		command: ["mongod", "--replSet", "rsBanco", "--bind_ip_all", "--port", "27017"]
-		networks:
-			- nexus-internal
-		volumes:
-			- mongo3_data:/data/db
-		deploy:
-			replicas: 1
-			placement:
-				constraints:
-					- node.role == manager
-			restart_policy:
-				condition: on-failure
+  mongo3:
+    image: mongo:7
+    command: ["mongod", "--replSet", "rsBanco", "--bind_ip_all", "--port", "27017"]
+    networks:
+      - nexus-internal
+    volumes:
+      - mongo3_data:/data/db
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
 
-	mongo-init:
-		image: mongo:7
-		networks:
-			- nexus-internal
-		entrypoint: ["/bin/sh", "-c"]
-		command:
-			- |
-				echo "Esperando a MongoDB...";
-				sleep 15;
-				mongosh --host mongo1:27017 --eval "
-					try {
-						rs.status();
-						print('Replica set ya existe');
-					} catch (e) {
-						rs.initiate({
-							_id: 'rsBanco',
-							members: [
-								{ _id: 0, host: 'mongo1:27017' },
-								{ _id: 1, host: 'mongo2:27017' },
-								{ _id: 2, host: 'mongo3:27017' }
-							]
-						});
-						print('Replica set iniciado');
-					}
-				"
-		deploy:
-			replicas: 1
-			placement:
-				constraints:
-					- node.role == manager
-			restart_policy:
-				condition: none
+  mongo-init:
+    image: mongo:7
+    networks:
+      - nexus-internal
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Esperando a MongoDB...";
+        sleep 15;
+        mongosh --host mongo1:27017 --eval "
+          try {
+            rs.status();
+            print('Replica set ya existe');
+          } catch (e) {
+            rs.initiate({
+              _id: 'rsBanco',
+              members: [
+                { _id: 0, host: 'mongo1:27017' },
+                { _id: 1, host: 'mongo2:27017' },
+                { _id: 2, host: 'mongo3:27017' }
+              ]
+            });
+            print('Replica set iniciado');
+          }
+        "
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: none
 
-	backend:
-		image: ${BACKEND_IMAGE}
-		networks:
-			- nexus-internal
-			- nexus-public
-		environment:
-			PORT: "3000"
-			JWT_SECRET: ${JWT_SECRET}
-			MONGO_URI: mongodb://mongo1:27017,mongo2:27017,mongo3:27017/nexus?replicaSet=rsBanco
-		ports:
-			- "3000:3000"
-		deploy:
-			replicas: 2
-			restart_policy:
-				condition: on-failure
-			update_config:
-				parallelism: 1
-				delay: 10s
+  backend:
+    image: ${BACKEND_IMAGE}
+    networks:
+      - nexus-internal
+      - nexus-public
+    environment:
+      PORT: "3000"
+      JWT_SECRET: ${JWT_SECRET}
+      MONGO_URI: mongodb://mongo1:27017,mongo2:27017,mongo3:27017/nexus?replicaSet=rsBanco
+    ports:
+      - "3000:3000"
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
 
-	frontend:
-		image: ${FRONTEND_IMAGE}
-		networks:
-			- nexus-public
-		environment:
-			VITE_API_URL: ${FRONTEND_API_URL}
-		ports:
-			- "80:5173"
-		deploy:
-			replicas: 2
-			restart_policy:
-				condition: on-failure
-			update_config:
-				parallelism: 1
-				delay: 10s
-
-
+  frontend:
+    image: ${FRONTEND_IMAGE}
+    networks:
+      - nexus-public
+    environment:
+      VITE_API_URL: ${FRONTEND_API_URL}
+    ports:
+      - "80:80"
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
