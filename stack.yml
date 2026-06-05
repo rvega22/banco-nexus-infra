@@ -1,17 +1,18 @@
 version: "3.9"
 
 networks:
-	nexus-public:
-		driver: overlay
-		attachable: true
-	nexus-internal:
-		driver: overlay
-		attachable: true
+  nexus-public:
+    driver: overlay
+    attachable: true
+
+  nexus-internal:
+    driver: overlay
+    attachable: true
 
 volumes:
-	mongo1_data:
-	mongo2_data:
-	mongo3_data:
+  mongo1_data:
+  mongo2_data:
+  mongo3_data:
 
 services:
 	mongo1:
