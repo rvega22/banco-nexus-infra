@@ -2,10 +2,12 @@ stackName: banco_nexus
 
 images:
   backend: roberto1117/banco-nexus-backend:latest
-  frontend: roberto1117/banco-nexus-frontend:latest
 
 runtime:
-  frontendApiUrl: http://ec2-54-164-21-152.compute-1.amazonaws.com:3000/api
+  backendPort: 3000
+
+database:
+  provider: mongodb-atlas
 
 requiredGithubSecrets:
   - DOCKER_USERNAME
@@ -13,8 +15,8 @@ requiredGithubSecrets:
   - AWS_SSH_HOST
   - AWS_SSH_USER
   - AWS_SSH_KEY
-  - FRONTEND_API_URL
   - JWT_SECRET
+  - MONGO_URI
 
 requiredGithubVariables:
   - STACK_NAME
